@@ -11,6 +11,7 @@ float tankLevel          = 0.0;
 float soilMoisture       = 0.0;
 float lightIntensity     = 0.0;
 float soilTemperature    = 0.0;
+char received_transmit_id[32] = "None"; // To show which transmitter sent the data
 int soilmoisturethreshold=35;
 
 int relaypin=20;
@@ -42,10 +43,11 @@ public:
 
     Serial.printf("Raw message: %s\n", received);
 
-    // Parse the string into individual float variables
-    // Expected format: "TankLevel:45.230,SoilMoisture:67.1234,LightIntensity:23.4500,SoilTemperature:28.3000"
+    // Parse the string into individual variables
+    // Expected format: "TransmitID:TX_01,TankLevel:45.23,SoilMoisture:67.123,LightIntensity:23.45,SoilTemperature:28.3"
     sscanf(received,
-      "TankLevel:%f,SoilMoisture:%f,LightIntensity:%f,SoilTemperature:%f",
+      "TransmitID:%[^,],TankLevel:%f,SoilMoisture:%f,LightIntensity:%f,SoilTemperature:%f",
+      received_transmit_id,
       &tankLevel,
       &soilMoisture,
       &lightIntensity,
@@ -54,6 +56,7 @@ public:
 
     // Print parsed values
     Serial.println("Parsed values:");
+    Serial.printf("  Transmit ID     : %s\n", received_transmit_id);
     Serial.printf("  Tank Level      : %.3f mm\n", tankLevel);
     Serial.printf("  Soil Moisture   : %.2f %%\n", soilMoisture);
     Serial.printf("  Light Intensity : %.2f %%\n", lightIntensity);
@@ -120,7 +123,7 @@ void loop() {
   static unsigned long last_debug = 0;
   if (millis() - last_debug > 1000) {
     last_debug = millis();
-    Serial.printf("\n--- Current Readings ---\n");
+    Serial.printf("\n--- Readings from %s ---\n", received_transmit_id);
     Serial.printf("Tank Level      : %.2f mm\n", tankLevel);
     Serial.printf("Soil Moisture   : %.3f %%\n", soilMoisture);
     Serial.printf("Light Intensity : %.3f %%\n", lightIntensity);
@@ -132,5 +135,5 @@ void loop() {
     Serial.println("WARNING: Soil moisture critically low!");
     digitalWrite(relaypin,HIGH);
   }
-  delay(100);
+  delay(2000);
 }

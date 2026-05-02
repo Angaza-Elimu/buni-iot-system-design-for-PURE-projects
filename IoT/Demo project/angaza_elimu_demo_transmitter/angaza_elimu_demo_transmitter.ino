@@ -2,20 +2,24 @@
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 #include <esp_mac.h>  // For the MAC2STR and MACSTR macros
-#include <DHT.h>
+#include <DHT22.h>
+
+const char* transmit_id = "TX_01"; // Unique ID for this transmitter
+
 //pin definition
 #define DHTPIN 7
 #define soilpin 5
 #define lightsensor 4
 int trigPin=35;
 int echoPin=38;
-int redled=16;
-int greenled=33;
-int blueled=19;
+#define redled 16
+#define greenled 33
+#define blueled 19
+#define relaypin 18
 
 //dht settings
 #define DHTTYPE DHT22// declaring dht type either dht 22 or dht 11
-DHT dht(DHTPIN, DHTTYPE);//defining an object where we will map the functions to. in this case our object dht
+DHT22 dht(DHTPIN);//defining an object where we will map the functions to. in this case our object dht
 
 
 int pingTravelTime;
@@ -77,7 +81,6 @@ public:
 };
 
 
-
 // Create a broadcast peer object
 ESP_NOW_Broadcast_Peer broadcast_peer(ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, nullptr);
 void setup() {
@@ -93,7 +96,7 @@ void setup() {
   pinMode(greenled,OUTPUT);
   pinMode(redled,OUTPUT);
 
-  dht.begin();//initializing the dht object we created earlier
+  // dht.begin();//initializing the dht object we created earlier
 
     //Serial.begin(115200);
 
@@ -118,7 +121,7 @@ void setup() {
     ESP.restart();
   }
 
-  Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
+  // Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
 
   Serial.println("Setup complete. Broadcasting messages every 5 seconds.");
 }
@@ -127,16 +130,16 @@ void loop() {
   // put your main code here, to run repeatedly:
   tanklevel=checktanklevel();
   soilmoisturecondition=checksoilmoisture();
-  delay(100);
+  delay(1000);
   lightintensitycondition=checklightcondition();
-  delay(100);
+  delay(1000);
   soiltemperaturecondition=checksoiltemperature(); 
-  delay(100);
+  delay(1000);
   broadcastingMessage(tanklevel,soilmoisturecondition,lightintensitycondition,soiltemperaturecondition);
 }
 double checksoiltemperature(){
     // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
+  float t = dht.getTemperature();
   Serial.print("soil tempt = ");
   Serial.println(t);
   delay (500);
@@ -150,7 +153,7 @@ double checksoilmoisture(){
   soilvalue=analogRead(soilpin);
   moisturepercentage=map(soilvalue,1023,0,0,100);//dry soil =1023 wet soil=0
   
-  constrain(moisturepercentage, 0, 100);
+  moisturepercentage = constrain(moisturepercentage, 0, 100);
   return moisturepercentage;
   
 }
@@ -160,7 +163,7 @@ double checklightcondition(){
   delay (500);
   float light_Intensity_Value= analogRead(lightsensor);
   lightintesitypercentage = map(light_Intensity_Value,0,1023,0,100);//dark=0 light =1023
-  constrain(lightintesitypercentage,0,100);
+  lightintesitypercentage = constrain(lightintesitypercentage,0,100);
   return lightintesitypercentage;
 }
 double checktanklevel(){
@@ -195,9 +198,10 @@ return distanceToTarget;
 
 void broadcastingMessage(float tanklevel,float soilmoisturecondition,float lightintesitycondition,float soiltemperaturecondition){
   // Broadcast a message to all devices within the network
-char data[128]; // increased from 32 — more data needs more space
-  
-  snprintf(data, sizeof(data), "TankLevel:%.2f,SoilMoisture:%.3f,LightIntensity:%.3f,SoilTemperature:%.3f",
+  char data[128]; // increased from 32 — more data needs more space
+    
+  snprintf(data, sizeof(data), "TransmitID:%s,TankLevel:%.2f,SoilMoisture:%.3f,LightIntensity:%.3f,SoilTemperature:%.3f",
+    transmit_id,
     tanklevel,
     soilmoisturecondition,
     lightintensitycondition,
