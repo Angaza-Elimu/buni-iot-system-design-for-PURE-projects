@@ -337,6 +337,12 @@ This project is part of the **Angaza Elimu** educational initiative.
 
 ---
 
+## Connection guide
+
+[This project is part of the **Angaza Elimu** educational initiative.](https://docs.google.com/document/d/16AOQn633pmLf8N2Gxzo8KiwnacRFhQqeyscEQgz8jJw/edit?tab=t.0)
+
+---
+
 ## Credits
 
 **Developed by:** Angaza Elimu IoT Team  
